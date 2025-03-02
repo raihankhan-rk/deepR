@@ -95,18 +95,76 @@ export const researchService = {
   },
   
   downloadReportPdf: async (researchId: string) => {
-    const response = await api.get(`/research/${researchId}/pdf`, {
-      responseType: 'blob'
-    });
-    
-    // Create a download link and trigger download
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `research_report.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    try {
+      const response = await api.get(`/research/${researchId}/pdf`, {
+        responseType: 'blob'
+      });
+      
+      // Check if the response is valid
+      if (response.status !== 200) {
+        throw new Error(`Failed to download PDF: Server returned ${response.status}`);
+      }
+      
+      // Verify we have data and it's a PDF
+      if (!response.data || response.data.type !== 'application/pdf') {
+        console.warn('Unexpected response type:', response.data?.type);
+      }
+      
+      // Create a download link and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Get filename from Content-Disposition header if available
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'research_report.pdf';
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]*)"?/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      link.remove();
+      
+      return true;
+    } catch (error: unknown) {
+      console.error('Error downloading PDF:', error);
+      
+      // Type guard to check if error is an axios error with response data
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: unknown } };
+        
+        if (axiosError.response?.data instanceof Blob) {
+          try {
+            const text = await axiosError.response.data.text();
+            try {
+              const errorData = JSON.parse(text);
+              throw new Error(errorData.detail || 'Failed to download PDF');
+            } catch (e) {
+              throw new Error(`Failed to download PDF: ${text || 'Unknown error'}`);
+            }
+          } catch (blobError) {
+            throw new Error('Failed to process error response from server');
+          }
+        }
+      }
+      
+      // If we can't extract a specific error message, use a generic one
+      // or try to get the message property if it exists
+      if (error && typeof error === 'object' && 'message' in error) {
+        throw new Error(`Failed to download PDF: ${(error as Error).message}`);
+      } else {
+        throw new Error('Failed to download PDF: Unknown error occurred');
+      }
+    }
   },
   
   getResearchHistory: async () => {

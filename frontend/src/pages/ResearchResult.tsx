@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { researchService } from '../services/api';
 import { FiDownload, FiExternalLink, FiLoader, FiAlertCircle } from 'react-icons/fi';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 
 interface Source {
   title: string;
@@ -30,6 +34,8 @@ const ResearchResult: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('in_progress');
   const [activeSection, setActiveSection] = useState(0);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -64,10 +70,23 @@ const ResearchResult: React.FC = () => {
   
   const handleDownloadPdf = async () => {
     if (!id) return;
+    
+    setIsPdfLoading(true);
+    setPdfError(null);
+    
     try {
       await researchService.downloadReportPdf(id);
-    } catch (err) {
+      // Success - no need to show a message as the download will start automatically
+    } catch (err: any) {
       console.error('Error downloading PDF:', err);
+      setPdfError(err.message || 'Failed to download PDF. Please try again later.');
+      
+      // Clear error after 5 seconds
+      setTimeout(() => {
+        setPdfError(null);
+      }, 5000);
+    } finally {
+      setIsPdfLoading(false);
     }
   };
   
@@ -135,11 +154,26 @@ const ResearchResult: React.FC = () => {
         <div className="mt-4 md:mt-0">
           <button
             onClick={handleDownloadPdf}
-            className="btn btn-primary flex items-center"
+            disabled={isPdfLoading}
+            className={`btn btn-primary flex items-center ${isPdfLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            <FiDownload className="mr-2" />
-            Download PDF
+            {isPdfLoading ? (
+              <>
+                <FiLoader className="animate-spin mr-2" />
+                Downloading...
+              </>
+            ) : (
+              <>
+                <FiDownload className="mr-2" />
+                Download PDF
+              </>
+            )}
           </button>
+          {pdfError && (
+            <div className="text-red-500 text-sm mt-2">
+              {pdfError}
+            </div>
+          )}
         </div>
       </div>
       
@@ -197,12 +231,29 @@ const ResearchResult: React.FC = () => {
             {activeSection === 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-4">Executive Summary</h2>
-                <div className="prose max-w-none">
-                  {report.summary.split('\n').map((paragraph, index) => (
-                    <p key={index} className="mb-4">
-                      {paragraph}
-                    </p>
-                  ))}
+                <div className="prose prose-lg max-w-none">
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]} 
+                    rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                    components={{
+                      h1: ({node, children, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props}>{children}</h1>,
+                      h2: ({node, children, ...props}) => <h2 className="text-xl font-bold mt-5 mb-3" {...props}>{children}</h2>,
+                      h3: ({node, children, ...props}) => <h3 className="text-lg font-bold mt-4 mb-2" {...props}>{children}</h3>,
+                      p: ({node, children, ...props}) => <p className="mb-4" {...props}>{children}</p>,
+                      ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4" {...props}>{children}</ul>,
+                      ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4" {...props}>{children}</ol>,
+                      li: ({node, children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
+                      blockquote: ({node, children, ...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props}>{children}</blockquote>,
+                      table: ({node, children, ...props}) => <div className="overflow-x-auto my-4"><table className="min-w-full border-collapse border border-gray-300" {...props}>{children}</table></div>,
+                      thead: ({node, children, ...props}) => <thead className="bg-gray-100" {...props}>{children}</thead>,
+                      tbody: ({node, children, ...props}) => <tbody className="divide-y divide-gray-300" {...props}>{children}</tbody>,
+                      tr: ({node, children, ...props}) => <tr className="hover:bg-gray-50" {...props}>{children}</tr>,
+                      th: ({node, children, ...props}) => <th className="border border-gray-300 px-4 py-2 text-left font-semibold" {...props}>{children}</th>,
+                      td: ({node, children, ...props}) => <td className="border border-gray-300 px-4 py-2" {...props}>{children}</td>
+                    }}
+                  >
+                    {report.summary}
+                  </ReactMarkdown>
                 </div>
               </div>
             )}
@@ -211,12 +262,29 @@ const ResearchResult: React.FC = () => {
               activeSection === index + 1 && (
                 <div key={index}>
                   <h2 className="text-2xl font-bold mb-4">{section.title}</h2>
-                  <div className="prose max-w-none">
-                    {section.content.split('\n').map((paragraph, idx) => (
-                      <p key={idx} className="mb-4">
-                        {paragraph}
-                      </p>
-                    ))}
+                  <div className="prose prose-lg max-w-none">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]} 
+                      rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                      components={{
+                        h1: ({node, children, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props}>{children}</h1>,
+                        h2: ({node, children, ...props}) => <h2 className="text-xl font-bold mt-5 mb-3" {...props}>{children}</h2>,
+                        h3: ({node, children, ...props}) => <h3 className="text-lg font-bold mt-4 mb-2" {...props}>{children}</h3>,
+                        p: ({node, children, ...props}) => <p className="mb-4" {...props}>{children}</p>,
+                        ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4" {...props}>{children}</ul>,
+                        ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4" {...props}>{children}</ol>,
+                        li: ({node, children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
+                        blockquote: ({node, children, ...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props}>{children}</blockquote>,
+                        table: ({node, children, ...props}) => <div className="overflow-x-auto my-4"><table className="min-w-full border-collapse border border-gray-300" {...props}>{children}</table></div>,
+                        thead: ({node, children, ...props}) => <thead className="bg-gray-100" {...props}>{children}</thead>,
+                        tbody: ({node, children, ...props}) => <tbody className="divide-y divide-gray-300" {...props}>{children}</tbody>,
+                        tr: ({node, children, ...props}) => <tr className="hover:bg-gray-50" {...props}>{children}</tr>,
+                        th: ({node, children, ...props}) => <th className="border border-gray-300 px-4 py-2 text-left font-semibold" {...props}>{children}</th>,
+                        td: ({node, children, ...props}) => <td className="border border-gray-300 px-4 py-2" {...props}>{children}</td>
+                      }}
+                    >
+                      {section.content}
+                    </ReactMarkdown>
                   </div>
                 </div>
               )
@@ -238,7 +306,23 @@ const ResearchResult: React.FC = () => {
                         {source.url} <FiExternalLink className="ml-1" size={14} />
                       </a>
                       {source.snippet && (
-                        <p className="text-gray-600 text-sm">{source.snippet}</p>
+                        <div className="text-gray-600 text-sm prose prose-sm max-w-none">
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]} 
+                            rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                            components={{
+                              h1: ({node, children, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props}>{children}</h1>,
+                              h2: ({node, children, ...props}) => <h2 className="text-xl font-bold mt-5 mb-3" {...props}>{children}</h2>,
+                              h3: ({node, children, ...props}) => <h3 className="text-lg font-bold mt-4 mb-2" {...props}>{children}</h3>,
+                              p: ({node, children, ...props}) => <p className="mb-4" {...props}>{children}</p>,
+                              ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4" {...props}>{children}</ul>,
+                              ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4" {...props}>{children}</ol>,
+                              li: ({node, children, ...props}) => <li className="mb-1" {...props}>{children}</li>
+                            }}
+                          >
+                            {source.snippet}
+                          </ReactMarkdown>
+                        </div>
                       )}
                     </div>
                   ))}
