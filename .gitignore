@@ -1,0 +1,55 @@
+# DeepR Project .gitignore
+
+# Python Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/venv/
+backend/env/
+backend/.env
+backend/*.log
+backend/logs/
+backend/temp_*.pdf
+backend/dist/
+backend/build/
+backend/*.egg-info/
+
+# React Frontend
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+frontend/coverage/
+frontend/build/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*.sublime*
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+.cache/
+
+# Local environment files
+.env
+.env.local
+
+# Nested git repositories
+frontend/.git/
+backend/.git/ 
