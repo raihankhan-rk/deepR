@@ -79,8 +79,8 @@ export const authService = {
 
 // Research Service
 export const researchService = {
-  startResearch: async (topic: string, additionalContext?: string) => {
-    const response = await api.post('/research', { topic, additional_context: additionalContext });
+  startResearch: async (topic: string) => {
+    const response = await api.post('/research', { topic, additional_context: '' });
     return response.data;
   },
   

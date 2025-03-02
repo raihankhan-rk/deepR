@@ -3,21 +3,22 @@ module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#b9e6fe',
-          300: '#7cd4fd',
-          400: '#36bffa',
-          500: '#0ca6f1',
-          600: '#0284c7',
-          700: '#036ba1',
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49',
+          50: '#eef9ff',
+          100: '#d9f2ff',
+          200: '#bae8ff',
+          300: '#8adbff',
+          400: '#52c6ff',
+          500: '#29a9ff',
+          600: '#1a8df0',
+          700: '#1574d4',
+          800: '#1761ab',
+          900: '#195688',
+          950: '#123554',
         },
         secondary: {
           50: '#f8fafc',
@@ -32,12 +33,32 @@ module.exports = {
           900: '#0f172a',
           950: '#020617',
         },
+        dark: {
+          100: '#1e1e1e',
+          200: '#2d2d2d',
+          300: '#3c3c3c',
+          400: '#4b4b4b',
+          500: '#5a5a5a',
+          600: '#696969',
+          700: '#787878',
+          800: '#878787',
+          900: '#969696',
+        }
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
       boxShadow: {
         'custom': '0 4px 20px 0 rgba(0, 0, 0, 0.05)',
+        'dark': '0 4px 20px 0 rgba(0, 0, 0, 0.2)',
+      },
+      borderRadius: {
+        'xl': '0.75rem',
+        '2xl': '1rem',
+        '3xl': '1.5rem',
+      },
+      animation: {
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       }
     },
   },

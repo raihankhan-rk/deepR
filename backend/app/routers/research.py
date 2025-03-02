@@ -92,7 +92,7 @@ CRITICAL JSON FORMATTING REQUIREMENTS:
    - Use \\" for quotes within strings
    - Use \\n for newlines
    - Avoid using single backslashes (\\) before any character except the ones listed above
-3. Do NOT include any text, markdown formatting, or code blocks outside the JSON structure
+3. Do NOT include any text, markdown formatting, or code blocks outside the JSON structure. Do not include any text like backticks or ```json before the JSON structure.
 4. The entire response should be a single, valid JSON object
 
 This format will be used to generate a downloadable PDF report, so ensure your content is well-structured, comprehensive, and professionally formatted.

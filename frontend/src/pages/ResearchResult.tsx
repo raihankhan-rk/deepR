@@ -165,7 +165,7 @@ const ResearchResult: React.FC = () => {
             ) : (
               <>
                 <FiDownload className="mr-2" />
-                Download PDF
+                Download Report
               </>
             )}
           </button>
