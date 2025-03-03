@@ -118,7 +118,7 @@ async def conduct_research(research_id: str, topic: str, additional_context: Opt
             api_key=os.environ.get("GEMINI_API_KEY"),
         )
 
-        model = "gemini-2.0-pro-exp-02-05"
+        model = "gemini-2.0-flash"
         contents = [
             types.Content(
                 role="user",
