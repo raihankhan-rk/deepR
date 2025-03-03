@@ -19,11 +19,15 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# Configure CORS - allow all origins during debugging
+# Configure CORS
+origins = [
+    "https://deepr.raihankhan.dev",  # Production frontend
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for testing
-    allow_credentials=False,  # Set to False when allow_origins=["*"]
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
