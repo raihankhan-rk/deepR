@@ -11,6 +11,7 @@ import Research from './pages/Research';
 import ResearchResult from './pages/ResearchResult';
 import History from './pages/History';
 import NotFound from './pages/NotFound';
+import AuthCallback from './pages/AuthCallback';
 
 // Import components
 import Layout from './components/Layout';
@@ -19,12 +20,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             
             {/* Protected routes */}
             <Route path="/" element={
@@ -62,8 +64,8 @@ const App: React.FC = () => {
             {/* Not found route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </ThemeProvider>
   );
 };

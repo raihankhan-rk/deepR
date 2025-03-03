@@ -1,96 +1,102 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService } from '../services/api';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import authService from '../services/authService';
 
-interface User {
-  id: number;
-  email: string;
-  username: string;
-  created_at: string;
-}
-
-interface AuthContextProps {
-  user: User | null;
-  isLoading: boolean;
+interface AuthContextType {
+  user: any;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  signInWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkAuthStatus = async () => {
+    const initializeAuth = async () => {
       try {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-          const userData = await authService.getCurrentUser();
-          setUser(userData);
-          setIsAuthenticated(true);
-        }
+        // Try to get user data (this will use cached data if available)
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+        setIsLoading(false);
       } catch (error) {
-        console.error('Authentication error:', error);
-        localStorage.removeItem('access_token');
-      } finally {
+        console.error('Error initializing auth:', error);
+        setUser(null);
         setIsLoading(false);
       }
     };
 
-    checkAuthStatus();
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
-      await authService.login(email, password);
+      const response = await authService.login(email, password);
       const userData = await authService.getCurrentUser();
       setUser(userData);
-      setIsAuthenticated(true);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const register = async (username: string, email: string, password: string) => {
-    setIsLoading(true);
     try {
       await authService.register(username, email, password);
-      // After registration, log the user in
-      await login(email, password);
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    setUser(null);
-    setIsAuthenticated(false);
+  const signInWithGoogle = async () => {
+    try {
+      await authService.signInWithGoogle();
+      // Note: We don't need to set the user here as it will be handled by the callback
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await authService.logout();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
+  };
+
+  const value = {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
+    register,
+    signInWithGoogle,
+    logout
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated, login, register, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }; 

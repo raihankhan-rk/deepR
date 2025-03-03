@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { researchService } from '../services/api';
+import researchService from '../services/researchService';
 import { FiSearch, FiClock, FiArrowRight, FiLoader, FiAlertCircle } from 'react-icons/fi';
 
 interface ResearchItem {

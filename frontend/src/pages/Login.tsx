@@ -5,21 +5,17 @@ import { useTheme } from '../contexts/ThemeContext';
 import { BsEnvelope } from '@react-icons/all-files/bs/BsEnvelope';
 import { BsLock } from '@react-icons/all-files/bs/BsLock';
 import { BsBoxArrowInRight } from '@react-icons/all-files/bs/BsBoxArrowInRight';
-
-interface ValidationError {
-  type?: string;
-  loc?: string[];
-  msg?: string;
-  input?: string;
-}
+import { FcGoogle } from '@react-icons/all-files/fc/FcGoogle';
+import axios from 'axios';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   
-  const { login, isAuthenticated } = useAuth();
+  const { login, signInWithGoogle, isAuthenticated } = useAuth();
   const { darkMode } = useTheme();
   const navigate = useNavigate();
   
@@ -30,42 +26,90 @@ const Login: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Function to test backend connectivity
+  const testBackendConnection = async () => {
     setError(null);
     setIsLoading(true);
     
-    try {
-      await login(email, password);
-      navigate('/');
-    } catch (err: any) {
-      console.error('Login error:', err);
-      
-      // Handle different error formats
-      if (err.response?.data?.detail) {
-        // Simple string error
-        if (typeof err.response.data.detail === 'string') {
-          setError(err.response.data.detail);
-        } 
-        // Validation error object
-        else if (typeof err.response.data.detail === 'object') {
-          // Check if it's an array of validation errors
-          if (Array.isArray(err.response.data.detail)) {
-            const errorMessages = err.response.data.detail
-              .map((error: ValidationError) => error.msg)
-              .filter(Boolean)
-              .join('. ');
-            setError(errorMessages || 'Validation error occurred');
-          } else {
-            // Single validation error object
-            setError(err.response.data.detail.msg || 'Validation error occurred');
-          }
-        }
-      } else {
-        setError('Failed to login. Please check your credentials.');
+    const urls = [
+      'http://0.0.0.0:8000/api/test',
+      'http://0.0.0.0:8000/health',
+      'http://localhost:8000/api/test',
+      'http://localhost:8000/health',
+      'http://127.0.0.1:8000/api/test',
+      'http://127.0.0.1:8000/health'
+    ];
+    
+    let anySuccess = false;
+    const results = [];
+    
+    for (const url of urls) {
+      try {
+        console.log(`Testing connection to: ${url}`);
+        const response = await axios.get(url, { 
+          timeout: 5000,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        console.log(`Success connecting to ${url}:`, response.data);
+        anySuccess = true;
+        results.push({ url, success: true, data: response.data });
+      } catch (error: any) {
+        console.error(`Failed connecting to ${url}:`, error);
+        results.push({ 
+          url, 
+          success: false, 
+          error: error.message,
+          response: error.response?.data
+        });
       }
+    }
+    
+    setIsLoading(false);
+    
+    if (anySuccess) {
+      alert(`Backend connection test succeeded for at least one endpoint. Check console for details.`);
+    } else {
+      setError(`All backend connection tests failed. Check console for details.`);
+    }
+    
+    console.log('Backend connection test results:', results);
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      await login(email, password);
+    } catch (err: any) {
+      setError(err.message || 'Failed to login. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true);
+      setError('');
+      await signInWithGoogle();
+      
+      // Add a timeout to reset loading if it takes too long
+      setTimeout(() => {
+        if (document.visibilityState === 'visible') {
+          // Only reset if we're still on this page
+          setIsGoogleLoading(false);
+        }
+      }, 8000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in with Google. Please try again.');
+      setIsGoogleLoading(false);
     }
   };
 
@@ -78,11 +122,42 @@ const Login: React.FC = () => {
             Welcome Back
           </h2>
           <p className={`mt-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} transition-colors duration-200`}>
-            Sign in to your account to continue
+            Sign in to continue your research journey
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {/* Google Sign In Button */}
+        <div className="mt-8">
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={isGoogleLoading}
+            className={`w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm 
+              ${darkMode ? 'bg-dark-300 hover:bg-dark-400' : 'bg-white hover:bg-gray-50'} 
+              transition-colors duration-200`}
+          >
+            {isGoogleLoading ? (
+              <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <>
+                <FcGoogle className="w-5 h-5" />
+                <span className={`ml-2 ${darkMode ? 'text-white' : 'text-gray-700'}`}>
+                  Continue with Google
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className="mt-8 flex items-center">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <div className={`px-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Or</div>
+          <div className="flex-1 border-t border-gray-300"></div>
+        </div>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleFormSubmit}>
           {error && (
             <div className={`${darkMode ? 'bg-red-900/20 border-red-700' : 'bg-red-50 border-red-500'} border-l-4 p-4 rounded transition-colors duration-200`}>
               <p className={`text-sm ${darkMode ? 'text-red-400' : 'text-red-700'} transition-colors duration-200`}>{error}</p>
@@ -145,6 +220,18 @@ const Login: React.FC = () => {
             </button>
           </div>
         </form>
+        
+        {/* Add test button */}
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={testBackendConnection}
+            disabled={isLoading}
+            className="w-full bg-gray-500 text-white p-2 rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition"
+          >
+            Test Backend Connection
+          </button>
+        </div>
         
         <div className="mt-6 text-center">
           <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} transition-colors duration-200`}>
