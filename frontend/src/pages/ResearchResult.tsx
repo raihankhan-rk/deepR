@@ -193,7 +193,7 @@ const ResearchResult: React.FC = () => {
         {/* Table of Contents */}
         <div className="lg:col-span-1">
           <div className="card sticky top-4">
-            <h3 className="text-lg font-semibold mb-4">Contents</h3>
+            <h3 className="text-lg font-semibold mb-4">Sections</h3>
             <ul className="space-y-2">
               <li>
                 <button
