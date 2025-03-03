@@ -185,6 +185,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <main className={`flex-1 overflow-y-auto p-4 md:p-6 mt-16 md:mt-0 transition-colors duration-200`}>
           {children}
         </main>
+        
+        {/* Footer */}
+        <footer className={`py-4 px-6 text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} text-sm`}>
+          built by{' '}
+          <a
+            href="https://raihankhan.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`font-medium hover:text-primary-600 transition-colors duration-200 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}
+          >
+            raihan khan
+          </a>
+        </footer>
       </div>
     </div>
   );
