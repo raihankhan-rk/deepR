@@ -1,4 +1,5 @@
-import { api } from './api';
+import api from './api';
+import cacheService from './cacheService';
 
 // Define interfaces
 interface ResearchRequest {
@@ -50,11 +51,25 @@ const researchService = {
   },
 
   getResearchResult: async (researchId: string): Promise<ResearchResult> => {
+    // Try to get from cache first
+    const cachedReport = cacheService.getCachedReport(researchId);
+    if (cachedReport) {
+      return cachedReport;
+    }
+
+    // If not in cache, fetch from API
     const response = await api.get(`/research/${researchId}`);
     return response.data;
   },
 
   getResearchHistory: async (): Promise<ResearchHistoryResponse> => {
+    // Try to get from cache first
+    const cachedHistory = cacheService.getCachedHistory();
+    if (cachedHistory) {
+      return cachedHistory;
+    }
+
+    // If not in cache, fetch from API
     const response = await api.get('/research/history');
     return response.data;
   },

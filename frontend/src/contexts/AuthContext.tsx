@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import authService from '../services/authService';
+import cacheService from '../services/cacheService';
 
 interface AuthContextType {
   user: any;
@@ -28,6 +29,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       const userData = await authService.getCurrentUser();
       setUser(userData);
+      
+      // If user is authenticated, start prefetching reports
+      if (userData) {
+        try {
+          console.log('Starting report prefetch...');
+          cacheService.prefetchAndCacheReports().catch(error => {
+            console.error('Failed to prefetch reports:', error);
+          });
+        } catch (error) {
+          console.error('Error initiating prefetch:', error);
+        }
+      }
     };
 
     initializeAuth();
@@ -38,6 +51,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await authService.login(email, password);
       const userData = await authService.getCurrentUser();
       setUser(userData);
+      
+      // Start prefetching reports after successful login
+      cacheService.prefetchAndCacheReports().catch(error => {
+        console.error('Failed to prefetch reports after login:', error);
+      });
     } catch (error) {
       throw error;
     }
@@ -48,6 +66,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await authService.register(username, email, password);
       const userData = await authService.getCurrentUser();
       setUser(userData);
+      
+      // Start prefetching reports after successful registration
+      cacheService.prefetchAndCacheReports().catch(error => {
+        console.error('Failed to prefetch reports after registration:', error);
+      });
     } catch (error) {
       throw error;
     }
@@ -65,6 +88,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authService.logout();
       setUser(null);
+      // Clear the cache on logout
+      cacheService.clearCache();
     } catch (error) {
       throw error;
     }
