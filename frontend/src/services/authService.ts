@@ -103,7 +103,7 @@ const authService: AuthService = {
         localStorage.setItem('user_data_timestamp', Date.now().toString());
         
         // Try to get real user data in the background
-        const API_URL = process.env.REACT_APP_API_URL || 'http://0.0.0.0:8000/api';
+        const API_URL = process.env.REACT_APP_API_URL;
         fetch(`${API_URL}/users/me`, {
           method: 'GET',
           headers: {
