@@ -15,7 +15,7 @@ const AuthCallback: React.FC = () => {
         console.log('Auth callback page loaded, handling OAuth response');
         
         // Get the current session to see if sign-in was successful
-        setStatus('Checking Supabase session...');
+        setStatus('Authenticating...');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
