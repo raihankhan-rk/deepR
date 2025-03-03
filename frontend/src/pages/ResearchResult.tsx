@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { researchService } from '../services/api';
+import researchService from '../services/researchService';
 import { FiDownload, FiExternalLink, FiLoader, FiAlertCircle } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -49,7 +49,7 @@ const ResearchResult: React.FC = () => {
         
         if (statusResponse.status === 'completed') {
           // If completed, get the report
-          const reportData = await researchService.getResearchReport(id);
+          const reportData = await researchService.getResearchResult(id);
           setReport(reportData);
           setIsLoading(false);
         } else if (statusResponse.status === 'failed') {
@@ -76,8 +76,19 @@ const ResearchResult: React.FC = () => {
     setPdfError(null);
     
     try {
-      await researchService.downloadReportPdf(id);
-      // Success - no need to show a message as the download will start automatically
+      const blob = await researchService.downloadPdf(id);
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Research_Report_${id}.pdf`;
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (err: any) {
       console.error('Error downloading PDF:', err);
       setPdfError(err.message || 'Failed to download PDF. Please try again later.');
@@ -182,7 +193,7 @@ const ResearchResult: React.FC = () => {
         {/* Table of Contents */}
         <div className="lg:col-span-1">
           <div className="card sticky top-4">
-            <h3 className="text-lg font-semibold mb-4">Contents</h3>
+            <h3 className="text-lg font-semibold mb-4">Sections</h3>
             <ul className="space-y-2">
               <li>
                 <button

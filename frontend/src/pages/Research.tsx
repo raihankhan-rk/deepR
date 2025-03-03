@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { researchService } from '../services/api';
+import researchService from '../services/researchService';
 import { FiSearch, FiAlertCircle, FiLoader } from 'react-icons/fi';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -24,6 +24,7 @@ const Research: React.FC = () => {
     
     try {
       const response = await researchService.startResearch(topic);
+      console.log('Research started:', response);
       
       // Redirect to the research status page
       navigate(`/research/${response.research_id}`);

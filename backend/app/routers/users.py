@@ -21,6 +21,7 @@ router = APIRouter()
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_profile(current_user: dict = Depends(get_current_user)):
     """Get the current user's profile"""
+    print("Fetching user profile for:", current_user.get("email"))
     return UserResponse(
         id=current_user["id"],
         email=current_user["email"],
