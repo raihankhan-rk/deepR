@@ -6,7 +6,6 @@ import { BsEnvelope } from '@react-icons/all-files/bs/BsEnvelope';
 import { BsLock } from '@react-icons/all-files/bs/BsLock';
 import { BsBoxArrowInRight } from '@react-icons/all-files/bs/BsBoxArrowInRight';
 import { FcGoogle } from '@react-icons/all-files/fc/FcGoogle';
-import axios from 'axios';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -25,55 +24,6 @@ const Login: React.FC = () => {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
-
-  // Function to test backend connectivity
-  const testBackendConnection = async () => {
-    setError(null);
-    setIsLoading(true);
-    
-    const urls = [
-      'http://0.0.0.0:8000/api/test',
-      'http://0.0.0.0:8000/health',
-      'http://localhost:8000/api/test',
-      'http://localhost:8000/health',
-      'http://127.0.0.1:8000/api/test',
-      'http://127.0.0.1:8000/health'
-    ];
-    
-    let anySuccess = false;
-    const results = [];
-    
-    for (const url of urls) {
-      try {
-        console.log(`Testing connection to: ${url}`);
-        const response = await axios.get(url, { 
-          timeout: 5000,
-          headers: { 'Content-Type': 'application/json' }
-        });
-        console.log(`Success connecting to ${url}:`, response.data);
-        anySuccess = true;
-        results.push({ url, success: true, data: response.data });
-      } catch (error: any) {
-        console.error(`Failed connecting to ${url}:`, error);
-        results.push({ 
-          url, 
-          success: false, 
-          error: error.message,
-          response: error.response?.data
-        });
-      }
-    }
-    
-    setIsLoading(false);
-    
-    if (anySuccess) {
-      alert(`Backend connection test succeeded for at least one endpoint. Check console for details.`);
-    } else {
-      setError(`All backend connection tests failed. Check console for details.`);
-    }
-    
-    console.log('Backend connection test results:', results);
-  };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +53,6 @@ const Login: React.FC = () => {
       // Add a timeout to reset loading if it takes too long
       setTimeout(() => {
         if (document.visibilityState === 'visible') {
-          // Only reset if we're still on this page
           setIsGoogleLoading(false);
         }
       }, 8000);
@@ -220,18 +169,6 @@ const Login: React.FC = () => {
             </button>
           </div>
         </form>
-        
-        {/* Add test button */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={testBackendConnection}
-            disabled={isLoading}
-            className="w-full bg-gray-500 text-white p-2 rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition"
-          >
-            Test Backend Connection
-          </button>
-        </div>
         
         <div className="mt-6 text-center">
           <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} transition-colors duration-200`}>

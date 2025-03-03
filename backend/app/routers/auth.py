@@ -57,7 +57,6 @@ async def fetch_jwks(supabase_url: str) -> dict:
     try:
         # Correct JWKS URL format
         jwks_url = f"{supabase_url}/rest/v1/rpc/jwks"
-        print(f"Fetching JWKS from: {jwks_url}")
         
         # Include the anon key in the request headers
         headers = {
@@ -69,42 +68,32 @@ async def fetch_jwks(supabase_url: str) -> dict:
             response = await client.get(jwks_url, headers=headers)
             
         if response.status_code != 200:
-            print(f"JWKS fetch failed with status {response.status_code}")
-            print(f"JWKS error response: {response.text}")
             raise HTTPException(status_code=401, detail="Failed to fetch JWKS")
             
         return response.json()
     except Exception as e:
-        print(f"Error fetching JWKS: {str(e)}")
         raise HTTPException(status_code=401, detail=f"Failed to fetch JWKS: {str(e)}")
 
 async def validate_token(token: str = Depends(oauth2_scheme)) -> dict:
     """Validate the JWT token"""
-    print("=== Token Validation Start ===")
-    print(f"Received token (first 20 chars): {token[:20]}...")
     
     try:
         # Try to decode the token without verification first to get the claims
         unverified_payload = jwt.get_unverified_claims(token)
-        print(f"Unverified token payload: {unverified_payload}")
         
         # Check if this is a Supabase token
         if 'aud' in unverified_payload and unverified_payload['aud'] == 'authenticated':
-            print("Token appears to be a Supabase token, attempting Supabase validation...")
             try:
                 # Get the user's email from the token claims
                 email = unverified_payload.get('email')
                 if not email:
                     raise HTTPException(status_code=401, detail="No email in token")
                 
-                print(f"Found email in token: {email}")
-                
                 # Try to get existing user
                 response = supabase.table("users").select("*").eq("email", email).execute()
                 user = response.data[0] if response.data else None
                 
                 if not user:
-                    print(f"Creating new user for email: {email}")
                     # Create username from email
                     username = email.split('@')[0]
                     
@@ -116,20 +105,15 @@ async def validate_token(token: str = Depends(oauth2_scheme)) -> dict:
                     }
                     response = supabase.table("users").insert(new_user).execute()
                     user = response.data[0]
-                    print(f"Created new user: {user}")
-                else:
-                    print(f"Found existing user: {user}")
                 
                 return user
                 
             except Exception as e:
-                print(f"Error during Supabase user handling: {str(e)}")
                 raise HTTPException(
                     status_code=401,
                     detail=str(e)
                 )
         else:
-            print("Token appears to be a regular JWT, attempting regular validation...")
             # Fall back to regular JWT validation
             try:
                 payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -151,15 +135,12 @@ async def validate_token(token: str = Depends(oauth2_scheme)) -> dict:
                 
                 return user
             except Exception as e:
-                print(f"Regular JWT validation failed: {str(e)}")
                 raise HTTPException(
                     status_code=401,
                     detail="Could not validate credentials",
                 )
             
     except Exception as e:
-        print("=== Token Validation Failed ===")
-        print(f"Error: {str(e)}")
         raise HTTPException(
             status_code=401,
             detail="Could not validate credentials",

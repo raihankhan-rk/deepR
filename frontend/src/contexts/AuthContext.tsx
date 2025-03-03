@@ -4,7 +4,6 @@ import authService from '../services/authService';
 interface AuthContextType {
   user: any;
   isAuthenticated: boolean;
-  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -23,20 +22,12 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Initialize auth state from cached data
     const initializeAuth = async () => {
-      try {
-        // Try to get user data (this will use cached data if available)
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        setUser(null);
-        setIsLoading(false);
-      }
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
     };
 
     initializeAuth();
@@ -44,11 +35,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await authService.login(email, password);
+      await authService.login(email, password);
       const userData = await authService.getCurrentUser();
       setUser(userData);
     } catch (error) {
-      console.error('Login error:', error);
       throw error;
     }
   };
@@ -59,7 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userData = await authService.getCurrentUser();
       setUser(userData);
     } catch (error) {
-      console.error('Registration error:', error);
       throw error;
     }
   };
@@ -67,9 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async () => {
     try {
       await authService.signInWithGoogle();
-      // Note: We don't need to set the user here as it will be handled by the callback
     } catch (error) {
-      console.error('Google sign-in error:', error);
       throw error;
     }
   };
@@ -79,7 +66,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await authService.logout();
       setUser(null);
     } catch (error) {
-      console.error('Logout error:', error);
       throw error;
     }
   };
@@ -87,7 +73,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     isAuthenticated: !!user,
-    isLoading,
     login,
     register,
     signInWithGoogle,
