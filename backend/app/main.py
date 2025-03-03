@@ -22,6 +22,8 @@ app = FastAPI(
 # Configure CORS
 origins = [
     "https://deepr.raihankhan.dev",  # Production frontend
+    "https://deepr-production.up.railway.app",  # Railway frontend URL
+    "http://frontend.railway.internal",  # Railway internal networking
 ]
 
 app.add_middleware(
