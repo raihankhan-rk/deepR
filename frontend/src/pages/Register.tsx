@@ -1,201 +1,160 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { FiClock } from '@react-icons/all-files/fi/FiClock';
 import { FiUser } from '@react-icons/all-files/fi/FiUser';
-import { BsEnvelope } from '@react-icons/all-files/bs/BsEnvelope';
-import { BsLock } from '@react-icons/all-files/bs/BsLock';
-import { BsPersonPlus } from '@react-icons/all-files/bs/BsPersonPlus';
-
-interface ValidationError {
-  type?: string;
-  loc?: string[];
-  msg?: string;
-  input?: string;
-}
+import { FiMail } from '@react-icons/all-files/fi/FiMail';
+import { FiAlertCircle } from '@react-icons/all-files/fi/FiAlertCircle';
 
 const Register: React.FC = () => {
+  const navigate = useNavigate();
+  const { register } = useAuth();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const { register, isAuthenticated } = useAuth();
-  const { darkMode } = useTheme();
-  const navigate = useNavigate();
-  
-  // Redirect if already authenticated
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
-    }
-  }, [isAuthenticated, navigate]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
+    // Form validation
+    if (!username || !email || !password || !confirmPassword) {
+      setError('All fields are required');
+      return;
+    }
+    
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
     
-    setError(null);
-    setIsLoading(true);
+    setError('');
+    setLoading(true);
     
     try {
       await register(username, email, password);
       navigate('/');
     } catch (err: any) {
-      console.error('Registration error:', err);
-      
-      // Handle different error formats
-      if (err.response?.data?.detail) {
-        // Simple string error
-        if (typeof err.response.data.detail === 'string') {
-          setError(err.response.data.detail);
-        } 
-        // Validation error object
-        else if (typeof err.response.data.detail === 'object') {
-          // Check if it's an array of validation errors
-          if (Array.isArray(err.response.data.detail)) {
-            const errorMessages = err.response.data.detail
-              .map((error: ValidationError) => error.msg)
-              .filter(Boolean)
-              .join('. ');
-            setError(errorMessages || 'Validation error occurred');
-          } else {
-            // Single validation error object
-            setError(err.response.data.detail.msg || 'Validation error occurred');
-          }
-        }
-      } else {
-        setError('Failed to register. Please try again.');
-      }
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-dark-100' : 'bg-gray-50'} py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200`}>
-      <div className={`max-w-md w-full ${darkMode ? 'bg-dark-200' : 'bg-white'} shadow-custom rounded-2xl p-8 transition-colors duration-200`}>
-        <div className="text-center">
-          <h1 className="text-4xl font-bold gradient-text mb-2">DeepR</h1>
-          <h2 className={`mt-4 text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} transition-colors duration-200`}>
-            Create Account
-          </h2>
-          <p className={`mt-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} transition-colors duration-200`}>
-            Join DeepR to start your research journey
-          </p>
+    <div className="flex justify-center items-center min-h-[calc(100vh-theme(spacing.20))]">
+      <div className="w-full max-w-md p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">Create Account</h1>
+          <p className="text-gray-400">Sign up for a DeepR account</p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+
+        <div className="card">
           {error && (
-            <div className={`${darkMode ? 'bg-red-900/20 border-red-700' : 'bg-red-50 border-red-500'} border-l-4 p-4 rounded transition-colors duration-200`}>
-              <p className={`text-sm ${darkMode ? 'text-red-400' : 'text-red-700'} transition-colors duration-200`}>{error}</p>
+            <div className="mb-6 p-4 bg-red-900/50 border border-red-700 rounded-lg flex items-start">
+              <FiAlertCircle className="text-red-400 mt-0.5 mr-3 flex-shrink-0" />
+              <p className="text-sm text-red-300">{error}</p>
             </div>
           )}
-          
-          <div className="space-y-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiUser className={`h-5 w-5 ${darkMode ? 'text-gray-500' : 'text-gray-400'} transition-colors duration-200`} />
-              </div>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className={`input pl-10 ${darkMode ? 'bg-dark-300 border-dark-400 text-white' : 'bg-white border-gray-300 text-gray-900'} transition-colors duration-200`}
-                placeholder="Username"
-              />
-            </div>
-            
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <BsEnvelope className={`h-5 w-5 ${darkMode ? 'text-gray-500' : 'text-gray-400'} transition-colors duration-200`} />
-              </div>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`input pl-10 ${darkMode ? 'bg-dark-300 border-dark-400 text-white' : 'bg-white border-gray-300 text-gray-900'} transition-colors duration-200`}
-                placeholder="Email address"
-              />
-            </div>
-            
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <BsLock className={`h-5 w-5 ${darkMode ? 'text-gray-500' : 'text-gray-400'} transition-colors duration-200`} />
-              </div>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`input pl-10 ${darkMode ? 'bg-dark-300 border-dark-400 text-white' : 'bg-white border-gray-300 text-gray-900'} transition-colors duration-200`}
-                placeholder="Password"
-              />
-            </div>
-            
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <BsLock className={`h-5 w-5 ${darkMode ? 'text-gray-500' : 'text-gray-400'} transition-colors duration-200`} />
-              </div>
-              <input
-                id="confirm-password"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`input pl-10 ${darkMode ? 'bg-dark-300 border-dark-400 text-white' : 'bg-white border-gray-300 text-gray-900'} transition-colors duration-200`}
-                placeholder="Confirm Password"
-              />
-            </div>
-          </div>
 
-          <div>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label htmlFor="username" className="form-label">
+                Username
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiUser className="text-gray-500" />
+                </div>
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="form-input pl-10"
+                  placeholder="Choose a username"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="email" className="form-label">
+                Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiMail className="text-gray-500" />
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="form-input pl-10"
+                  placeholder="Enter your email"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiClock className="text-gray-500" />
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="form-input pl-10"
+                  placeholder="Create a password"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiClock className="text-gray-500" />
+                </div>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="form-input pl-10"
+                  placeholder="Confirm your password"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
             <button
               type="submit"
-              disabled={isLoading}
-              className="btn btn-primary w-full py-3 flex justify-center items-center"
+              className="btn btn-primary w-full"
+              disabled={loading}
             >
-              {isLoading ? (
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <>
-                  <BsPersonPlus className="mr-2" />
-                  Create Account
-                </>
-              )}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
-          </div>
-        </form>
-        
-        <div className="mt-6 text-center">
-          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} transition-colors duration-200`}>
+          </form>
+
+          <div className="mt-6 text-center text-gray-400 text-sm">
             Already have an account?{' '}
-            <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200">
+            <Link to="/login" className="text-indigo-400 hover:text-indigo-300">
               Sign in
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>

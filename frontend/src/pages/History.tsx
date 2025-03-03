@@ -1,168 +1,155 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { researchService } from '../services/api';
-import { FiSearch, FiClock, FiArrowRight, FiLoader, FiAlertCircle } from 'react-icons/fi';
+import { FiSearch } from '@react-icons/all-files/fi/FiSearch';
+import { FiClock } from '@react-icons/all-files/fi/FiClock';
+import axios from 'axios';
+import { API_URL } from '../config';
 
-interface ResearchItem {
+interface HistoryItem {
   id: string;
-  user_id: number;
   topic: string;
+  report: string;
   created_at: string;
 }
 
 const History: React.FC = () => {
-  const [researches, setResearches] = useState<ResearchItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
-  
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        console.log('Fetching research history...');
-        // Check if token exists
-        const token = localStorage.getItem('access_token');
-        console.log('Token exists:', !!token);
-        if (token) {
-          console.log('Token preview:', token.substring(0, 10) + '...');
-        }
-        
-        const response = await researchService.getResearchHistory();
-        console.log('History response:', response);
-        setResearches(response.researches);
-        setIsLoading(false);
+        const response = await axios.get(`${API_URL}/api/history`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        setHistory(response.data);
       } catch (err: any) {
-        console.error('Error fetching history:', err);
-        
-        // Detailed error logging
-        let errorMessage = 'Failed to load research history.';
-        let debugDetails = '';
-        
-        if (err.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          errorMessage = err.response.data?.detail || errorMessage;
-          debugDetails = `Status: ${err.response.status}, Data: ${JSON.stringify(err.response.data)}`;
-          console.error('Response error:', {
-            status: err.response.status,
-            data: err.response.data,
-            headers: err.response.headers
-          });
-        } else if (err.request) {
-          // The request was made but no response was received
-          debugDetails = 'No response received from server';
-          console.error('Request error - no response:', err.request);
-        } else {
-          // Something happened in setting up the request that triggered an Error
-          debugDetails = err.message || 'Unknown error';
-          console.error('Error message:', err.message);
-        }
-        
-        setError(errorMessage);
-        setDebugInfo(debugDetails);
-        setIsLoading(false);
+        setError('Failed to load history. Please try again.');
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
-    
+
     fetchHistory();
   }, []);
-  
-  if (isLoading) {
-    return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="flex items-center justify-center py-16">
-          <FiLoader className="animate-spin text-primary-600" size={36} />
-        </div>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="card">
-          <div className="flex items-center justify-center text-red-500 mb-4">
-            <FiAlertCircle size={48} />
-          </div>
-          <h2 className="text-2xl font-bold text-center mb-4">Error</h2>
-          <p className="text-center text-gray-700 mb-6">{error}</p>
-          {debugInfo && (
-            <div className="mt-4 p-4 bg-gray-100 rounded-lg overflow-auto">
-              <p className="text-xs font-mono">{debugInfo}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-  
-  if (researches.length === 0) {
-    return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Research History</h1>
-          <p className="text-gray-600">Track and access your past research</p>
-        </div>
-        
-        <div className="card text-center py-16">
-          <div className="flex justify-center mb-4">
-            <div className="bg-gray-100 p-4 rounded-full">
-              <FiClock className="text-gray-400" size={48} />
-            </div>
-          </div>
-          <h2 className="text-2xl font-bold mb-4">No Research History</h2>
-          <p className="text-gray-600 mb-8 max-w-md mx-auto">
-            You haven't conducted any research yet. Start your first research to see it here.
-          </p>
-          <Link to="/research" className="btn btn-primary inline-flex items-center">
-            <FiSearch className="mr-2" />
-            Start New Research
-          </Link>
-        </div>
-      </div>
-    );
-  }
-  
+
+  const filteredHistory = history.filter(item => 
+    item.topic.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' - ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Research History</h1>
-          <p className="text-gray-600">Track and access your past research</p>
-        </div>
-        
-        <div className="mt-4 md:mt-0">
-          <Link to="/research" className="btn btn-primary inline-flex items-center">
-            <FiSearch className="mr-2" />
-            New Research
-          </Link>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center mb-10">
+        <h1 className="text-3xl font-bold mb-4">Research History</h1>
+        <p className="text-gray-300 max-w-2xl mx-auto">
+          View and access your past research reports
+        </p>
       </div>
-      
-      <div className="card">
-        <div className="divide-y divide-gray-200">
-          {researches.map((research) => (
-            <div key={research.id} className="py-4 first:pt-0 last:pb-0">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">{research.topic}</h3>
-                  <p className="text-gray-500 text-sm flex items-center">
-                    <FiClock className="mr-2" size={14} />
-                    {new Date(research.created_at).toLocaleDateString()} at{' '}
-                    {new Date(research.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-                
-                <Link
-                  to={`/research/${research.id}`}
-                  className="btn btn-secondary inline-flex items-center"
-                >
-                  View Report <FiArrowRight className="ml-2" />
-                </Link>
-              </div>
+
+      <div className="max-w-4xl mx-auto">
+        <div className="card mb-6">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="text-gray-400" />
             </div>
-          ))}
+            <input
+              type="text"
+              className="bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="Search research history..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
+
+        {loading ? (
+          <div className="card text-center py-10">
+            <div className="animate-pulse flex flex-col items-center">
+              <div className="h-10 w-10 bg-gray-700 rounded-full mb-4"></div>
+              <div className="h-4 bg-gray-700 rounded w-1/3 mb-3"></div>
+              <div className="h-3 bg-gray-700 rounded w-1/4"></div>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="card text-center py-8 text-red-400">
+            <p>{error}</p>
+            <button 
+              className="btn btn-primary mt-4"
+              onClick={() => window.location.reload()}
+            >
+              Try Again
+            </button>
+          </div>
+        ) : filteredHistory.length === 0 ? (
+          <div className="card text-center py-12">
+            {searchTerm ? (
+              <>
+                <h3 className="text-xl mb-2">No matching results</h3>
+                <p className="text-gray-400 mb-4">Try a different search term</p>
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => setSearchTerm('')}
+                >
+                  Clear Search
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-center mb-4">
+                  <FiClock className="text-4xl text-gray-500" />
+                </div>
+                <h3 className="text-xl mb-2">Your research history is empty</h3>
+                <p className="text-gray-400 mb-6">
+                  Start your first research to build your history
+                </p>
+                <Link to="/research" className="btn btn-primary">
+                  Start Researching
+                </Link>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredHistory.map((item) => (
+              <div key={item.id} className="card hover:border-indigo-500 transition-colors">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 mr-4">
+                    <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center">
+                      <FiClock className="text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-grow">
+                    <h3 className="text-lg font-medium mb-1">{item.topic}</h3>
+                    <div className="flex items-center text-sm text-gray-400">
+                      <FiClock className="mr-1" />
+                      <span>
+                        {formatDate(item.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    to={`/history/${item.id}`}
+                    className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

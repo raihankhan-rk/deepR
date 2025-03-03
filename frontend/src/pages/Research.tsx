@@ -1,113 +1,114 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { researchService } from '../services/api';
-import { FiSearch, FiAlertCircle, FiLoader } from 'react-icons/fi';
-import { useTheme } from '../contexts/ThemeContext';
+import { BiSearch } from '@react-icons/all-files/bi/BiSearch';
+import { FaSpinner } from '@react-icons/all-files/fa/FaSpinner';
+import ReactMarkdown from 'react-markdown';
+import axios from 'axios';
+import { API_URL } from '../config';
+import { useAuth } from '../contexts/AuthContext';
 
 const Research: React.FC = () => {
+  const { user } = useAuth();
   const [topic, setTopic] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { darkMode } = useTheme();
-  const navigate = useNavigate();
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [report, setReport] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!topic.trim()) {
-      setError('Please enter a research topic');
-      return;
-    }
-    
-    setError(null);
-    setIsSubmitting(true);
-    
+    if (!topic.trim()) return;
+
+    setLoading(true);
+    setError('');
+    setReport('');
+
     try {
-      const response = await researchService.startResearch(topic);
-      
-      // Redirect to the research status page
-      navigate(`/research/${response.research_id}`);
+      const response = await axios.post(`${API_URL}/api/research`, { topic }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      setReport(response.data.report);
+      // Save to history
+      if (user) {
+        await axios.post(
+          `${API_URL}/api/history`,
+          { topic, report: response.data.report },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+      }
     } catch (err: any) {
-      console.error('Research request error:', err);
-      setError(err.response?.data?.detail || 'Failed to start research. Please try again.');
-      setIsSubmitting(false);
+      setError(err.response?.data?.message || 'Failed to generate research report. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
-  
+
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8 md:py-16">
-      <div className="text-center mb-16">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6">
-          <span className="gradient-text">Deep Research</span>
-        </h1>
-        <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} max-w-2xl mx-auto text-lg`}>
-          Enter your research topic and our AI will generate a comprehensive, academic-quality report with sources.
+    <div className="container mx-auto px-4 pb-12">
+      <div className="text-center mb-10">
+        <h1 className="text-3xl font-bold mb-4">Research Assistant</h1>
+        <p className="text-gray-300 max-w-2xl mx-auto">
+          Enter any topic below and our AI will generate a comprehensive research report with citations.
         </p>
       </div>
       
       <div className="max-w-3xl mx-auto">
-        <form onSubmit={handleSubmit} className="mb-8">
-          {error && (
-            <div className={`${darkMode ? 'bg-red-900/20 border-red-700' : 'bg-red-50 border-red-500'} border-l-4 p-4 rounded-lg mb-6 flex items-start`}>
-              <FiAlertCircle className="text-red-500 mt-0.5 mr-3 flex-shrink-0" />
-              <p className={`text-sm ${darkMode ? 'text-red-400' : 'text-red-700'}`}>{error}</p>
+        <form onSubmit={handleSubmit} className="card mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-grow relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <BiSearch className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="Enter a research topic..."
+                className="bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                disabled={loading}
+              />
             </div>
-          )}
-          
-          <div className="relative">
-            <input
-              type="text"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              className="search-input pr-14"
-              placeholder="What do you want to know?"
-              disabled={isSubmitting}
-              required
-            />
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-3 rounded-full bg-primary-600 text-white hover:bg-primary-700 transition-colors duration-200 disabled:opacity-70"
-              aria-label="Start Research"
+              disabled={loading || !topic.trim()}
+              className="btn btn-primary flex-shrink-0"
             >
-              {isSubmitting ? (
-                <FiLoader className="animate-spin" size={20} />
+              {loading ? (
+                <>
+                  <FaSpinner className="animate-spin mr-2" /> Researching...
+                </>
               ) : (
-                <FiSearch size={20} />
+                'Generate Report'
               )}
             </button>
           </div>
         </form>
-        
-        <div className={`rounded-2xl p-6 ${darkMode ? 'bg-dark-200' : 'bg-white'} shadow-custom animated-bg`}>
-          <h3 className={`text-lg font-medium ${darkMode ? 'text-primary-400' : 'text-primary-800'} mb-4`}>What can you research?</h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className={`p-4 rounded-xl ${darkMode ? 'bg-dark-300' : 'bg-gray-50'}`}>
-              <h4 className="font-medium mb-2">Academic Topics</h4>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                "The impact of climate change on ocean ecosystems"
-              </p>
+
+        {error && <div className="p-4 mb-6 bg-red-900/50 border border-red-700 rounded-lg text-red-200">{error}</div>}
+
+        {report && (
+          <div className="card">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold">Research Report: {topic}</h2>
             </div>
-            <div className={`p-4 rounded-xl ${darkMode ? 'bg-dark-300' : 'bg-gray-50'}`}>
-              <h4 className="font-medium mb-2">Historical Events</h4>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                "The economic consequences of the Industrial Revolution"
-              </p>
-            </div>
-            <div className={`p-4 rounded-xl ${darkMode ? 'bg-dark-300' : 'bg-gray-50'}`}>
-              <h4 className="font-medium mb-2">Technology Trends</h4>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                "The evolution and future of artificial intelligence"
-              </p>
-            </div>
-            <div className={`p-4 rounded-xl ${darkMode ? 'bg-dark-300' : 'bg-gray-50'}`}>
-              <h4 className="font-medium mb-2">Health & Medicine</h4>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                "Advances in cancer treatment over the last decade"
-              </p>
+            <div className="prose prose-invert max-w-none">
+              <ReactMarkdown>{report}</ReactMarkdown>
             </div>
           </div>
-        </div>
+        )}
+
+        {!report && !loading && (
+          <div className="card text-center py-16">
+            <h3 className="text-xl mb-3 font-medium">Enter a topic to get started</h3>
+            <p className="text-gray-400">
+              Try topics like "Quantum Computing", "Climate Change Solutions", or "Artificial Intelligence Ethics"
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
