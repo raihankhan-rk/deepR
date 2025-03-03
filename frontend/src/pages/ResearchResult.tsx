@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
+import './ResearchResult.css';
 
 interface Source {
   title: string;
@@ -231,17 +232,18 @@ const ResearchResult: React.FC = () => {
             {activeSection === 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-4">Executive Summary</h2>
-                <div className="prose prose-lg max-w-none">
+                <div className="prose prose-lg max-w-none markdown-content">
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]} 
                     rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                    className="research-markdown"
                     components={{
                       h1: ({node, children, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props}>{children}</h1>,
                       h2: ({node, children, ...props}) => <h2 className="text-xl font-bold mt-5 mb-3" {...props}>{children}</h2>,
                       h3: ({node, children, ...props}) => <h3 className="text-lg font-bold mt-4 mb-2" {...props}>{children}</h3>,
-                      p: ({node, children, ...props}) => <p className="mb-4" {...props}>{children}</p>,
-                      ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4" {...props}>{children}</ul>,
-                      ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4" {...props}>{children}</ol>,
+                      p: ({node, children, ...props}) => <p className="mb-4 whitespace-pre-line" {...props}>{children}</p>,
+                      ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-2" {...props}>{children}</ul>,
+                      ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-2" {...props}>{children}</ol>,
                       li: ({node, children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
                       blockquote: ({node, children, ...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props}>{children}</blockquote>,
                       table: ({node, children, ...props}) => <div className="overflow-x-auto my-4"><table className="min-w-full border-collapse border border-gray-300" {...props}>{children}</table></div>,
@@ -249,7 +251,20 @@ const ResearchResult: React.FC = () => {
                       tbody: ({node, children, ...props}) => <tbody className="divide-y divide-gray-300" {...props}>{children}</tbody>,
                       tr: ({node, children, ...props}) => <tr className="hover:bg-gray-50" {...props}>{children}</tr>,
                       th: ({node, children, ...props}) => <th className="border border-gray-300 px-4 py-2 text-left font-semibold" {...props}>{children}</th>,
-                      td: ({node, children, ...props}) => <td className="border border-gray-300 px-4 py-2" {...props}>{children}</td>
+                      td: ({node, children, ...props}) => <td className="border border-gray-300 px-4 py-2" {...props}>{children}</td>,
+                      pre: ({node, children, ...props}) => <pre className="bg-gray-100 p-4 rounded overflow-x-auto my-4 whitespace-pre-wrap" {...props}>{children}</pre>,
+                      code: ({node, className, children, ...props}: any) => {
+                        const match = /language-(\w+)/.exec(className || '')
+                        return className && match ? (
+                          <code className={`${className} block p-4 rounded overflow-x-auto`} {...props}>
+                            {children}
+                          </code>
+                        ) : (
+                          <code className="bg-gray-100 px-1 py-0.5 rounded text-sm" {...props}>
+                            {children}
+                          </code>
+                        )
+                      }
                     }}
                   >
                     {report.summary}
@@ -262,17 +277,18 @@ const ResearchResult: React.FC = () => {
               activeSection === index + 1 && (
                 <div key={index}>
                   <h2 className="text-2xl font-bold mb-4">{section.title}</h2>
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none markdown-content">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm]} 
                       rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                      className="research-markdown"
                       components={{
                         h1: ({node, children, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props}>{children}</h1>,
                         h2: ({node, children, ...props}) => <h2 className="text-xl font-bold mt-5 mb-3" {...props}>{children}</h2>,
                         h3: ({node, children, ...props}) => <h3 className="text-lg font-bold mt-4 mb-2" {...props}>{children}</h3>,
-                        p: ({node, children, ...props}) => <p className="mb-4" {...props}>{children}</p>,
-                        ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4" {...props}>{children}</ul>,
-                        ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4" {...props}>{children}</ol>,
+                        p: ({node, children, ...props}) => <p className="mb-4 whitespace-pre-line" {...props}>{children}</p>,
+                        ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-2" {...props}>{children}</ul>,
+                        ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-2" {...props}>{children}</ol>,
                         li: ({node, children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
                         blockquote: ({node, children, ...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props}>{children}</blockquote>,
                         table: ({node, children, ...props}) => <div className="overflow-x-auto my-4"><table className="min-w-full border-collapse border border-gray-300" {...props}>{children}</table></div>,
@@ -280,7 +296,20 @@ const ResearchResult: React.FC = () => {
                         tbody: ({node, children, ...props}) => <tbody className="divide-y divide-gray-300" {...props}>{children}</tbody>,
                         tr: ({node, children, ...props}) => <tr className="hover:bg-gray-50" {...props}>{children}</tr>,
                         th: ({node, children, ...props}) => <th className="border border-gray-300 px-4 py-2 text-left font-semibold" {...props}>{children}</th>,
-                        td: ({node, children, ...props}) => <td className="border border-gray-300 px-4 py-2" {...props}>{children}</td>
+                        td: ({node, children, ...props}) => <td className="border border-gray-300 px-4 py-2" {...props}>{children}</td>,
+                        pre: ({node, children, ...props}) => <pre className="bg-gray-100 p-4 rounded overflow-x-auto my-4 whitespace-pre-wrap" {...props}>{children}</pre>,
+                        code: ({node, className, children, ...props}: any) => {
+                          const match = /language-(\w+)/.exec(className || '')
+                          return className && match ? (
+                            <code className={`${className} block p-4 rounded overflow-x-auto`} {...props}>
+                              {children}
+                            </code>
+                          ) : (
+                            <code className="bg-gray-100 px-1 py-0.5 rounded text-sm" {...props}>
+                              {children}
+                            </code>
+                          )
+                        }
                       }}
                     >
                       {section.content}
@@ -310,13 +339,14 @@ const ResearchResult: React.FC = () => {
                           <ReactMarkdown 
                             remarkPlugins={[remarkGfm]} 
                             rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                            className="research-markdown"
                             components={{
                               h1: ({node, children, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props}>{children}</h1>,
                               h2: ({node, children, ...props}) => <h2 className="text-xl font-bold mt-5 mb-3" {...props}>{children}</h2>,
                               h3: ({node, children, ...props}) => <h3 className="text-lg font-bold mt-4 mb-2" {...props}>{children}</h3>,
-                              p: ({node, children, ...props}) => <p className="mb-4" {...props}>{children}</p>,
-                              ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4" {...props}>{children}</ul>,
-                              ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4" {...props}>{children}</ol>,
+                              p: ({node, children, ...props}) => <p className="mb-4 whitespace-pre-line" {...props}>{children}</p>,
+                              ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-2" {...props}>{children}</ul>,
+                              ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-2" {...props}>{children}</ol>,
                               li: ({node, children, ...props}) => <li className="mb-1" {...props}>{children}</li>
                             }}
                           >
