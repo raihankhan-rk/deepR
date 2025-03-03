@@ -12,6 +12,8 @@ import jwt as pyjwt
 import requests
 import httpx
 import json
+import secrets
+import string
 
 # Models
 from app.models.user import UserCreate, UserResponse, Token, TokenData
@@ -51,6 +53,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+def generate_random_password(length=16):
+    """Generate a random secure password"""
+    alphabet = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 async def fetch_jwks(supabase_url: str) -> dict:
     """Fetch the JWKS from Supabase"""
@@ -97,10 +104,15 @@ async def validate_token(token: str = Depends(oauth2_scheme)) -> dict:
                     # Create username from email
                     username = email.split('@')[0]
                     
+                    # Generate and hash a random password for Google users
+                    random_password = generate_random_password()
+                    hashed_password = get_password_hash(random_password)
+                    
                     # Create new user
                     new_user = {
                         "email": email,
                         "username": username,
+                        "hashed_password": hashed_password,
                         "created_at": datetime.utcnow().isoformat()
                     }
                     response = supabase.table("users").insert(new_user).execute()
