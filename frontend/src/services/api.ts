@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
 
-// API URL from environment
-const API_URL = process.env.REACT_APP_API_URL;
+// API URL from environment with HTTPS enforcement
+const API_URL = process.env.REACT_APP_API_URL?.replace('http://', 'https://');
 
 // Initialize Supabase client
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
@@ -22,6 +22,11 @@ export const api = axios.create({
 // Add request interceptor
 api.interceptors.request.use(
   async (config) => {
+    // Ensure HTTPS in production
+    if (process.env.NODE_ENV === 'production' && config.url?.startsWith('http://')) {
+      config.url = config.url.replace('http://', 'https://');
+    }
+
     // Try to get Supabase session first
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.access_token) {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import researchService from '../services/researchService';
+import api from '../services/api';
 import { FiSearch, FiAlertCircle, FiLoader } from 'react-icons/fi';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -23,12 +23,13 @@ const Research: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      const response = await researchService.startResearch(topic);
+      const response = await api.post('/research/', {
+        topic: topic.trim()
+      });
       
       // Redirect to the research status page
-      navigate(`/research/${response.research_id}`);
+      navigate(`/research/${response.data.research_id}`);
     } catch (err: any) {
-      console.error('Research request error:', err);
       setError(err.response?.data?.detail || 'Failed to start research. Please try again.');
       setIsSubmitting(false);
     }
@@ -36,6 +37,14 @@ const Research: React.FC = () => {
   
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 md:py-16">
+      {/* Hidden debug info in production */}
+      {process.env.NODE_ENV === 'production' && (
+        <div className="hidden">
+          <div id="api-url-debug">API URL: {process.env.REACT_APP_API_URL}</div>
+          <div id="base-url-debug">Base URL: {window.location.origin}</div>
+        </div>
+      )}
+      
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-5xl font-bold mb-6">
           <span className="gradient-text">Deep Research</span>
