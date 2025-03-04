@@ -24,7 +24,6 @@ const Research: React.FC = () => {
     
     try {
       const response = await researchService.startResearch(topic);
-      console.log('Research started:', response);
       
       // Redirect to the research status page
       navigate(`/research/${response.research_id}`);

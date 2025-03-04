@@ -19,21 +19,10 @@ const History: React.FC = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        console.log('Fetching research history...');
-        // Check if token exists
-        const token = localStorage.getItem('access_token');
-        console.log('Token exists:', !!token);
-        if (token) {
-          console.log('Token preview:', token.substring(0, 10) + '...');
-        }
-        
         const response = await researchService.getResearchHistory();
-        console.log('History response:', response);
         setResearches(response.researches);
         setIsLoading(false);
       } catch (err: any) {
-        console.error('Error fetching history:', err);
-        
         // Detailed error logging
         let errorMessage = 'Failed to load research history.';
         let debugDetails = '';
@@ -43,19 +32,12 @@ const History: React.FC = () => {
           // that falls out of the range of 2xx
           errorMessage = err.response.data?.detail || errorMessage;
           debugDetails = `Status: ${err.response.status}, Data: ${JSON.stringify(err.response.data)}`;
-          console.error('Response error:', {
-            status: err.response.status,
-            data: err.response.data,
-            headers: err.response.headers
-          });
         } else if (err.request) {
           // The request was made but no response was received
           debugDetails = 'No response received from server';
-          console.error('Request error - no response:', err.request);
         } else {
           // Something happened in setting up the request that triggered an Error
           debugDetails = err.message || 'Unknown error';
-          console.error('Error message:', err.message);
         }
         
         setError(errorMessage);

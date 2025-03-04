@@ -12,31 +12,22 @@ const AuthCallback: React.FC = () => {
     const handleAuthCallback = async () => {
       try {
         setStatus('Auth callback page loaded, handling OAuth response');
-        console.log('Auth callback page loaded, handling OAuth response');
         
         // Get the current session to see if sign-in was successful
         setStatus('Authenticating...');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          console.error('Error getting session:', sessionError);
           setError('Authentication failed. Please try again.');
           setTimeout(() => navigate('/login'), 3000);
           return;
         }
         
         if (session) {
-          console.log('Auth successful, session established:', {
-            hasSession: !!session,
-            user: session.user?.email,
-            accessToken: session.access_token ? `${session.access_token.substring(0, 20)}...` : null
-          });
-          
           setStatus('Session found, attempting to get user data from backend...');
           
           try {
             const userData = await authService.getCurrentUser();
-            console.log('User data from backend:', userData);
             
             // Important: Add a small delay before navigation to ensure state is updated
             setStatus('Successfully authenticated! Redirecting...');
@@ -44,8 +35,6 @@ const AuthCallback: React.FC = () => {
               navigate('/', { replace: true });
             }, 1000);
           } catch (userDataError) {
-            console.error('Failed to get user data from backend:', userDataError);
-            
             // If we have a session but failed to get user data, still try to proceed
             setStatus('Error getting user data, but proceeding with session...');
             setTimeout(() => {
@@ -53,12 +42,10 @@ const AuthCallback: React.FC = () => {
             }, 1000);
           }
         } else {
-          console.log('No session found after OAuth callback');
           setError('No session established. Please try again.');
           setTimeout(() => navigate('/login'), 3000);
         }
       } catch (err) {
-        console.error('Error handling auth callback:', err);
         setError('An unexpected error occurred. Please try again.');
         setTimeout(() => navigate('/login'), 3000);
       }

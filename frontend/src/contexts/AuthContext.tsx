@@ -33,7 +33,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // If user is authenticated, start prefetching reports
       if (userData) {
         try {
-          console.log('Starting report prefetch...');
           cacheService.prefetchAndCacheReports().catch(error => {
             console.error('Failed to prefetch reports:', error);
           });
