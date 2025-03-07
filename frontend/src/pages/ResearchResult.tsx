@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 import './ResearchResult.css';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Source {
   title: string;
@@ -37,6 +38,7 @@ const ResearchResult: React.FC = () => {
   const [activeSection, setActiveSection] = useState(0);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const { darkMode } = useTheme();
   
   useEffect(() => {
     const fetchData = async () => {
@@ -158,7 +160,7 @@ const ResearchResult: React.FC = () => {
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">{report.topic}</h1>
-          <p className="text-gray-500">
+          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             Research completed on {new Date(report.created_at).toLocaleDateString()}
           </p>
         </div>
@@ -200,8 +202,8 @@ const ResearchResult: React.FC = () => {
                   onClick={() => setActiveSection(0)}
                   className={`block w-full text-left px-3 py-2 rounded-lg transition ${
                     activeSection === 0
-                      ? 'bg-primary-50 text-primary-600'
-                      : 'hover:bg-gray-100'
+                      ? `${darkMode ? 'bg-primary-900/30 text-primary-400' : 'bg-primary-50 text-primary-600'}`
+                      : `${darkMode ? 'hover:bg-dark-300' : 'hover:bg-gray-100'}`
                   }`}
                 >
                   Executive Summary
@@ -213,8 +215,8 @@ const ResearchResult: React.FC = () => {
                     onClick={() => setActiveSection(index + 1)}
                     className={`block w-full text-left px-3 py-2 rounded-lg transition ${
                       activeSection === index + 1
-                        ? 'bg-primary-50 text-primary-600'
-                        : 'hover:bg-gray-100'
+                        ? `${darkMode ? 'bg-primary-900/30 text-primary-400' : 'bg-primary-50 text-primary-600'}`
+                        : `${darkMode ? 'hover:bg-dark-300' : 'hover:bg-gray-100'}`
                     }`}
                   >
                     {section.title}
@@ -226,8 +228,8 @@ const ResearchResult: React.FC = () => {
                   onClick={() => setActiveSection(report.sections.length + 1)}
                   className={`block w-full text-left px-3 py-2 rounded-lg transition ${
                     activeSection === report.sections.length + 1
-                      ? 'bg-primary-50 text-primary-600'
-                      : 'hover:bg-gray-100'
+                      ? `${darkMode ? 'bg-primary-900/30 text-primary-400' : 'bg-primary-50 text-primary-600'}`
+                      : `${darkMode ? 'hover:bg-dark-300' : 'hover:bg-gray-100'}`
                   }`}
                 >
                   Sources
@@ -243,7 +245,7 @@ const ResearchResult: React.FC = () => {
             {activeSection === 0 && (
               <div>
                 <h2 className="text-2xl font-bold mb-4">Executive Summary</h2>
-                <div className="prose prose-lg max-w-none markdown-content">
+                <div className={`prose ${darkMode ? 'dark:prose-invert' : ''} prose-lg max-w-none markdown-content`}>
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]} 
                     rehypePlugins={[rehypeRaw, rehypeSanitize]}
@@ -256,14 +258,14 @@ const ResearchResult: React.FC = () => {
                       ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-2" {...props}>{children}</ul>,
                       ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-2" {...props}>{children}</ol>,
                       li: ({node, children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
-                      blockquote: ({node, children, ...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props}>{children}</blockquote>,
-                      table: ({node, children, ...props}) => <div className="overflow-x-auto my-4"><table className="min-w-full border-collapse border border-gray-300" {...props}>{children}</table></div>,
-                      thead: ({node, children, ...props}) => <thead className="bg-gray-100" {...props}>{children}</thead>,
-                      tbody: ({node, children, ...props}) => <tbody className="divide-y divide-gray-300" {...props}>{children}</tbody>,
-                      tr: ({node, children, ...props}) => <tr className="hover:bg-gray-50" {...props}>{children}</tr>,
-                      th: ({node, children, ...props}) => <th className="border border-gray-300 px-4 py-2 text-left font-semibold" {...props}>{children}</th>,
-                      td: ({node, children, ...props}) => <td className="border border-gray-300 px-4 py-2" {...props}>{children}</td>,
-                      pre: ({node, children, ...props}) => <pre className="bg-gray-100 p-4 rounded overflow-x-auto my-4 whitespace-pre-wrap" {...props}>{children}</pre>,
+                      blockquote: ({node, children, ...props}) => <blockquote className={`border-l-4 ${darkMode ? 'border-gray-700' : 'border-gray-300'} pl-4 italic my-4`} {...props}>{children}</blockquote>,
+                      table: ({node, children, ...props}) => <div className="overflow-x-auto my-4"><table className={`min-w-full border-collapse border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} {...props}>{children}</table></div>,
+                      thead: ({node, children, ...props}) => <thead className={darkMode ? 'bg-dark-300' : 'bg-gray-100'} {...props}>{children}</thead>,
+                      tbody: ({node, children, ...props}) => <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-300'}`} {...props}>{children}</tbody>,
+                      tr: ({node, children, ...props}) => <tr className={darkMode ? 'hover:bg-dark-300' : 'hover:bg-gray-50'} {...props}>{children}</tr>,
+                      th: ({node, children, ...props}) => <th className={`border ${darkMode ? 'border-gray-700' : 'border-gray-300'} px-4 py-2 text-left font-semibold`} {...props}>{children}</th>,
+                      td: ({node, children, ...props}) => <td className={`border ${darkMode ? 'border-gray-700' : 'border-gray-300'} px-4 py-2`} {...props}>{children}</td>,
+                      pre: ({node, children, ...props}) => <pre className={`${darkMode ? 'bg-dark-300' : 'bg-gray-100'} p-4 rounded overflow-x-auto my-4 whitespace-pre-wrap`} {...props}>{children}</pre>,
                       code: ({node, className, children, ...props}: any) => {
                         const match = /language-(\w+)/.exec(className || '')
                         return className && match ? (
@@ -271,7 +273,7 @@ const ResearchResult: React.FC = () => {
                             {children}
                           </code>
                         ) : (
-                          <code className="bg-gray-100 px-1 py-0.5 rounded text-sm" {...props}>
+                          <code className={`${darkMode ? 'bg-dark-300 text-gray-200' : 'bg-gray-100 text-gray-800'} px-1 py-0.5 rounded text-sm`} {...props}>
                             {children}
                           </code>
                         )
@@ -335,7 +337,7 @@ const ResearchResult: React.FC = () => {
                 <h2 className="text-2xl font-bold mb-4">Sources</h2>
                 <div className="space-y-4">
                   {report.sources.map((source, index) => (
-                    <div key={index} className="border-b border-gray-200 pb-4 last:border-0">
+                    <div key={index} className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-4 last:border-0`}>
                       <h3 className="font-medium mb-1">{source.title}</h3>
                       <a
                         href={source.url}
@@ -346,20 +348,11 @@ const ResearchResult: React.FC = () => {
                         {source.url} <FiExternalLink className="ml-1" size={14} />
                       </a>
                       {source.snippet && (
-                        <div className="text-gray-600 text-sm prose prose-sm max-w-none">
+                        <div className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm prose prose-sm max-w-none`}>
                           <ReactMarkdown 
                             remarkPlugins={[remarkGfm]} 
                             rehypePlugins={[rehypeRaw, rehypeSanitize]}
                             className="research-markdown"
-                            components={{
-                              h1: ({node, children, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props}>{children}</h1>,
-                              h2: ({node, children, ...props}) => <h2 className="text-xl font-bold mt-5 mb-3" {...props}>{children}</h2>,
-                              h3: ({node, children, ...props}) => <h3 className="text-lg font-bold mt-4 mb-2" {...props}>{children}</h3>,
-                              p: ({node, children, ...props}) => <p className="mb-4 whitespace-pre-line" {...props}>{children}</p>,
-                              ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-2" {...props}>{children}</ul>,
-                              ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-2" {...props}>{children}</ol>,
-                              li: ({node, children, ...props}) => <li className="mb-1" {...props}>{children}</li>
-                            }}
                           >
                             {source.snippet}
                           </ReactMarkdown>
