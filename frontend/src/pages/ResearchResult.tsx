@@ -353,6 +353,15 @@ const ResearchResult: React.FC = () => {
                             remarkPlugins={[remarkGfm]} 
                             rehypePlugins={[rehypeRaw, rehypeSanitize]}
                             className="research-markdown"
+                            components={{
+                              h1: ({node, children, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props}>{children}</h1>,
+                              h2: ({node, children, ...props}) => <h2 className="text-xl font-bold mt-5 mb-3" {...props}>{children}</h2>,
+                              h3: ({node, children, ...props}) => <h3 className="text-lg font-bold mt-4 mb-2" {...props}>{children}</h3>,
+                              p: ({node, children, ...props}) => <p className="mb-4 whitespace-pre-line" {...props}>{children}</p>,
+                              ul: ({node, children, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-2" {...props}>{children}</ul>,
+                              ol: ({node, children, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-2" {...props}>{children}</ol>,
+                              li: ({node, children, ...props}) => <li className="mb-1" {...props}>{children}</li>
+                            }}
                           >
                             {source.snippet}
                           </ReactMarkdown>
