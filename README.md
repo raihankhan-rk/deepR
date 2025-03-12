@@ -40,7 +40,7 @@ This project consists of two main components:
 
 1. Navigate to the backend directory:
    ```bash
-   cd deepR-backend
+   cd backend
    ```
 
 2. Create a virtual environment:
@@ -73,7 +73,7 @@ This project consists of two main components:
 
 1. Navigate to the frontend directory:
    ```bash
-   cd deepR-frontend
+   cd frontend
    ```
 
 2. Install dependencies:
